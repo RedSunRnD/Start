@@ -13,7 +13,7 @@ public class RecommendationRepository {
     private final JdbcTemplate jdbcTemplate;
 
     private final Cache<String, Boolean> userHasProductCache = Caffeine.newBuilder()
-            .expireAfterWrite(10, TimeUnit.MINUTES) // Настройте по нужде
+            .expireAfterWrite(10, TimeUnit.MINUTES)
             .maximumSize(1000)
             .build();
 
@@ -65,5 +65,11 @@ public class RecommendationRepository {
                     userId, productType, transactionType);
             return sum != null ? sum : 0;
         });
+    }
+
+    public void clearCaches() {
+        userHasProductCache.invalidateAll();
+        activeUserCache.invalidateAll();
+        sumTransactionsCache.invalidateAll();
     }
 }

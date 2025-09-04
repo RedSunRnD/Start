@@ -2,7 +2,9 @@ package com.example.start.service;
 
 import com.example.start.dto.Recommendation;
 import com.example.start.entity.Rule;
+import com.example.start.entity.RuleStats;
 import com.example.start.repository.RecommendationRepository;
+import com.example.start.repository.RuleStatsRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -13,15 +15,21 @@ import java.util.UUID;
 public class DynamicRuleEvaluator {
 
     private final RecommendationRepository repository;
+    private final RuleStatsRepository ruleStatsRepository;
 
-    public DynamicRuleEvaluator(RecommendationRepository repository) {
+    public DynamicRuleEvaluator(RecommendationRepository repository, RuleStatsRepository ruleStatsRepository) {
         this.repository = repository;
+        this.ruleStatsRepository = ruleStatsRepository;
     }
 
     public Optional<Recommendation> evaluateRuleForUser(Rule dynamicRule, UUID userId) {
         boolean allTrue = dynamicRule.getRule().stream()
                 .allMatch(query -> evaluateQuery(query, userId));
         if (allTrue) {
+            RuleStats stats = ruleStatsRepository.findByRuleId(dynamicRule.getId())
+                    .orElseGet(() -> new RuleStats(dynamicRule.getId()));
+            stats.incrementCount();
+            ruleStatsRepository.save(stats);
             return Optional.of(new Recommendation(dynamicRule.getProductId(), dynamicRule.getProductName(), dynamicRule.getProductText()));
         }
         return Optional.empty();
@@ -50,7 +58,7 @@ public class DynamicRuleEvaluator {
                 String prodType = args.get(0);
                 String op = args.get(1);
                 double depositSum = repository.getSumTransactions(userId, prodType, "DEPOSIT");
-                double withdrawSum = repository.getSumTransactions(userId, prodType, "WITHDRAWAL"); // WITHDRAW -> WITHDRAWAL? В исходном коде "WITHDRAWAL", проверьте!
+                double withdrawSum = repository.getSumTransactions(userId, prodType, "WITHDRAWAL");
                 result = compare(depositSum, op, withdrawSum);
                 break;
             default:
