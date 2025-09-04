@@ -1,0 +1,70 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: RS
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true } }
+              - column: { name: username, type: varchar(255), constraints: { nullable: false, unique: true } }
+              - column: { name: first_name, type: varchar(255), constraints: { nullable: false } }
+              - column: { name: last_name, type: varchar(255), constraints: { nullable: false } }
+
+  - changeSet:
+      id: 2
+      author: RS
+      changes:
+        - createTable:
+            tableName: products
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true } }
+              - column: { name: type, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: name, type: varchar(255), constraints: { nullable: false } }
+
+  - changeSet:
+      id: 3
+      author: RS
+      changes:
+        - createTable:
+            tableName: transactions
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true } }
+              - column: { name: user_id, type: uuid, constraints: { nullable: false } }
+              - column: { name: product_id, type: uuid, constraints: { nullable: false } }
+              - column: { name: type, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: amount, type: numeric, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 4
+      author: RS
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: rules
+      changes:
+        - createTable:
+            tableName: rules
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true } }
+              - column: { name: product_id, type: varchar(255), constraints: { nullable: false, unique: true } }
+              - column: { name: product_name, type: varchar(255), constraints: { nullable: false } }
+              - column: { name: product_text, type: text, constraints: { nullable: false } }
+              - column: { name: rule, type: jsonb }
+
+  - changeSet:
+      id: 5
+      author: RS
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: rule_stats
+      changes:
+        - createTable:
+            tableName: rule_stats
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true } }
+              - column: { name: rule_id, type: uuid, constraints: { nullable: false, unique: true } }
+              - column: { name: count, type: bigint, constraints: { nullable: false } }
